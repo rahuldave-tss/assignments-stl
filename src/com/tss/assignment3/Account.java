@@ -1,5 +1,8 @@
 package com.tss.assignment3;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public abstract class Account {
     private static int newId=1;
     private static long accountCounter=100_000_000;
@@ -7,32 +10,25 @@ public abstract class Account {
     private final long accountNumber;
     private String customerName;
     private double balance;
+    private List<Transaction> transactionList;
 
-    public static void setNewId(int newId) {
-        Account.newId = newId;
-    }
-
-    public static void setAccountCounter(long accountCounter) {
-        Account.accountCounter = accountCounter;
-    }
-
-    public void setCustomerName(String customerName) {
-        this.customerName = customerName;
+    public List<Transaction> getTransactionList() {
+        return transactionList;
     }
 
     public void setBalance(double balance) {
         this.balance = balance;
     }
 
-    Account(String customerName, double balance){
+    public Account(String customerName, double balance){
         this.id=newId;
         this.accountNumber=accountCounter;
-        accountCounter+=100;
+        accountCounter+=250;
         this.customerName=customerName;
         this.balance=balance;
         newId++;
+        transactionList=new ArrayList<>();
     }
-
 
     public int getId() {
         return id;

@@ -14,6 +14,7 @@ public class Validate {
                     temp = validateInt();
 
                 }
+                scanner.nextLine();
                 return temp;
             }
             else{
@@ -31,6 +32,7 @@ public class Validate {
                     System.out.print("Enter positive number: ");
                     temp = validateDouble();
                 }
+                scanner.nextLine();
                 return temp;
             }
             else{
@@ -48,6 +50,7 @@ public class Validate {
                     System.out.print("Enter positive number: ");
                     temp = validateLong();
                 }
+                scanner.nextLine();
                 return temp;
             }
             else{
@@ -55,5 +58,26 @@ public class Validate {
                 scanner.next();
             }
         }
+    }
+
+    public static String validateString(){
+        String temp="";
+        while(true){
+            temp=scanner.nextLine();
+            if(onlyCharInString(temp)){
+                return temp;
+            }
+            System.out.print("Enter only character string: ");
+        }
+    }
+
+    private static boolean onlyCharInString(String temp) {
+        for(int i=0;i<temp.length();i++){
+            if(temp.charAt(i)==' ')continue;
+            if((temp.charAt(i)<'a' || temp.charAt(i)>'z') && (temp.charAt(i)<'A' || temp.charAt(i)>'Z')){
+                return false;
+            }
+        }
+        return true;
     }
 }

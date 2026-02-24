@@ -1,48 +1,84 @@
 package com.tss.assignment3;
 
-import java.util.Scanner;
+import com.tss.exceptions.NegativeAmountException;
 
+import java.util.ArrayList;
+import java.util.List;
+import static com.tss.utils.Validate.*;
 
 public class Main {
-    static Scanner scanner=new Scanner(System.in);
-    static final int MAX_ACCOUNTS=10;
-    static Account[] accounts=new Account[MAX_ACCOUNTS];
-    static int accountIndex=0;
+    static List<Account> accounts=new ArrayList<>();
 
     public static void main(String[] args) {
+        while(true) {
+            try {
+                displayMenu();
+                int choice = validateInt();
+                switch (choice) {
+                    case 1: {
+                        createAccount();
+                        break;
+                    }
+                    case 2: {
+                        depositMoney();
+                        break;
+                    }
+                    case 3: {
+                        withdrawMoney();
+                        break;
+                    }
+                    case 4: {
+                        showBalance();
+                        break;
+                    }
+                    case 5: {
+                        transferMoney();
+                        break;
+                    }
+                    case 6: {
+                        showTransactions();
+                        break;
+                    }
+                    case 7: {
+                        deleteAccount();
+                        break;
+                    }
+                    case 8: {
+                        System.out.println("Have a Good Day!!");
+                        return;
+                    }
+                    default: {
+                        System.out.println("Enter a valid choice !!");
+                    }
+                }
 
-        while(true){
-            displayMenu();
-            int choice= validateInt();
-            switch (choice){
-                case 1:{
-                    createAccount();
-                    break;
-                }
-                case 2:{
-                    depositMoney();
-                    break;
-                }
-                case 3:{
-                    withdrawMoney();
-                    break;
-                }
-                case 4:{
-                    showBalance();
-                    break;
-                }
-                case 5:{
-                    transferMoney();
-                    break;
-                }
-                case 6:{
-                    System.out.println("Have a Good Day!!");
-                    return;
-                }
-                default:{
-                    System.out.println("Enter a valid choice !!");
-                }
+            } catch (RuntimeException e) {
+                System.out.println(e.getMessage());
             }
+        }
+
+    }
+
+    private static void deleteAccount() {
+        Account account=selectAccount();
+        accounts.remove(account);
+        System.out.println("Account Deleted !!");
+    }
+
+    private static void showTransactions() {
+        Account account=selectAccount();
+        System.out.println("Statement for Account Number: "+account.getAccountNumber()+"\nAccount Holder Name: "+account.getCustomerName());
+        System.out.println();
+        System.out.printf(
+                "%-10s | %-10s | %-15s | %-15s | %-10s%n",
+                "Txn ID", "Type", "Sender Acc No",
+                "Receiver Acc No", "Amount"
+        );
+        System.out.println("--------------------------------------------------------------------------");
+        List<Transaction> transactions=account.getTransactionList();
+        for(Transaction t:transactions){
+            System.out.println(t);
+            System.out.println();
         }
 
     }
@@ -52,106 +88,48 @@ public class Main {
             if(a==null)return;
             System.out.println("Account ID: "+a.getId());
             System.out.println("Account Number: "+a.getAccountNumber());
+            System.out.println("Account Type: "+a.getClass().getSimpleName());
             System.out.println();
         }
     }
 
     private static void transferMoney() {
-        if(accounts[1]==null){
-            System.out.println("Accounts not created yet!! Please First create the account");
-            return;
+        if(accounts.size()<2){
+            throw new IllegalStateException("Accounts not created yet!! Please First create the account");
         }
-        displayAccountDetails();
-        System.out.print("Enter the Sender's Account Number: ");
-        int senderId=validateInt();
-        System.out.print("Enter the Receiver's Account Number: ");
-        int receiverId=validateInt();
-        Account sender=getAccount(senderId);
-        Account receiver=getAccount(receiverId);
+//        displayAccountDetails();
+        System.out.println("Enter the Sender's Details: ");
+        Account sender=selectAccount();
+        Account receiver;
 
-        if(sender==null || receiver==null){
-            System.out.println("Account not found");
-        }
-        else if(sender.getAccountNumber()==receiver.getAccountNumber()){
+        while(true){
+            System.out.println("Enter the Receiver's Details: ");
+            receiver=selectAccount();
+            if(sender!=receiver)break;
             System.out.println("Can't transfer money to same account !!");
         }
-        else{
-            System.out.print("Enter the amount to transfer: ");
-            double amount=validateDouble();
-            double senderBeforeBalance=sender.getBalance();
-            sender.withdraw(amount);
-            if(senderBeforeBalance==sender.getBalance()){
-                System.out.println("Amount not Transferred !!");
-            }
-            else{
-                receiver.deposit(amount);
-                System.out.println("Amount Transferred Successfully !!");
-            }
-        }
 
-    }
+        System.out.print("Enter the amount to transfer: ");
+        double amount=validateDouble();
 
-    private static int validateInt(){
-        int temp;
-        while(true){
-            if(scanner.hasNextInt()){
-                temp = scanner.nextInt();
-                return temp;
-            }
-            else{
-                System.out.print("Enter valid number: ");
-                scanner.next();
-            }
-        }
-    }
-    private static double validateDouble(){
-        double temp;
-        while(true){
-            if(scanner.hasNextDouble()){
-                temp = scanner.nextDouble();
-                return temp;
-            }
-            else{
-                System.out.print("Enter valid number: ");
-                scanner.next();
-            }
-        }
+        sender.withdraw(amount);
+        receiver.deposit(amount);
+
+        Transaction t=new Transaction(sender.getAccountNumber(), receiver.getAccountNumber(), TransactionType.TRANSFER.toString(),amount);
+        List<Transaction> s=sender.getTransactionList();
+        List<Transaction> r=receiver.getTransactionList();
+
+        s.add(t);
+        r.add(t);
+        System.out.println("Amount Transferred Successfully !!");
+
     }
 
 
     private static void showBalance() {
-        if(accounts[0]==null){
-            System.out.println("Account not created yet!! Please First create the account");
-            return;
-        }
-
-        System.out.print("Enter the Account Number to show Balance: ");
-        long accountNumber=validateLong();
-        while(accountNumber<0){
-            System.out.print("Enter Account Number in positive: ");
-            accountNumber=scanner.nextLong();
-        }
-        Account account=getAccount(accountNumber);
-        if(account==null){
-            System.out.println("No such account found !!");
-            return;
-        }
+        Account account=selectAccount();
         System.out.println("Total Balance :"+account.getBalance());
         System.out.println();
-    }
-
-    private static long validateLong(){
-        long temp;
-        while(true){
-            if(scanner.hasNextLong()){
-                temp = scanner.nextLong();
-                return temp;
-            }
-            else{
-                System.out.print("Enter valid number: ");
-                scanner.next();
-            }
-        }
     }
 
     private static Account getAccount(long accountNumber) {
@@ -165,54 +143,66 @@ public class Main {
     }
 
     private static void depositMoney() {
-        if(accounts[0]==null){
-            System.out.println("Account not created yet!! Please First create the account");
-            return;
-        }
-        displayAccountDetails();
-
-        System.out.print("Enter the Account Number to Deposit Amount: ");
-        long accountNumber=validateLong();
-        while(accountNumber<0){
-            System.out.print("Enter Account Number in positive: ");
-            accountNumber=scanner.nextLong();
-        }
-        Account account=getAccount(accountNumber);
-        if(account==null){
-            System.out.println("No such account found !!");
-            return;
-        }
+        Account account=selectAccount();
         System.out.print("Enter the amount to Deposit :");
         double amount=validateDouble();
         if(amount<0){
-            System.out.println("Amount must be positive");
-            return;
+            throw new NegativeAmountException();
         }
         account.deposit(amount);
+
+        Transaction t=new Transaction(account.getAccountNumber(),TransactionType.DEPOSIT.toString(),amount);
+        List<Transaction> l=account.getTransactionList();
+        l.add(t);
+
         System.out.println("Amount Deposited !!");
     }
 
     private static void withdrawMoney() {
-        if(accounts[0]==null){
-            System.out.println("Account not created yet!! Please First create the account");
-            return;
-        }
-        displayAccountDetails();
-        System.out.println("Enter the Account Number to withdraw money: ");
-        long accountNumber=validateLong();
-        while(accountNumber<0){
-            System.out.print("Enter Account Number in positive: ");
-            accountNumber=scanner.nextLong();
-        }
-        Account account=getAccount(accountNumber);
-        if(account==null){
-            System.out.println("No such account found !!");
-            return;
-        }
+        Account account=selectAccount();
         System.out.print("Enter the amount of withdrawal :");
         double amount=validateDouble();
-        account.withdraw(amount);
+        if(amount<0){
+            throw new NegativeAmountException();
+        }
+
+        while(true){
+            try{
+                account.withdraw(amount);
+                break;
+            } catch (RuntimeException e) {
+                System.err.println(e.getMessage());
+                System.out.print("Enter amount again: ");
+            }
+        }
+
+        Transaction t=new Transaction(account.getAccountNumber(), TransactionType.WITHDRAW.toString(),amount);
+        List<Transaction> l=account.getTransactionList();
+        l.add(t);
+
         System.out.println("Amount Withdrawn !!");
+    }
+
+    private static Account selectAccount() {
+        if(accounts.isEmpty()){
+            throw new IllegalStateException("No Accounts Found !!");
+        }
+        displayAccountDetails();
+        while(true){
+            try{
+                System.out.println("Enter the Account Number : ");
+                long accountNumber=validateLong();
+                Account account=getAccount(accountNumber);
+                if(account==null){
+                    throw new IllegalArgumentException("No Account is associated with this account number !!");
+                }
+                return account;
+            }
+            catch(RuntimeException e){
+                System.err.println(e.getMessage());
+            }
+        }
+
     }
 
     private static void displayMenu() {
@@ -223,15 +213,14 @@ public class Main {
         System.out.println("3. Withdraw Money");
         System.out.println("4. Show Balance");
         System.out.println("5. Transfer Money");
-        System.out.println("6. Exit");
+        System.out.println("6. Show Transactions");
+        System.out.println("7. Delete Account");
+        System.out.println("8. Exit");
         System.out.print("Enter your Choice: ");
     }
 
     private static void createAccount() {
-        if(accountIndex==MAX_ACCOUNTS-1){
-            System.out.println("Maximum Accounts Reached, Can't create more !!");
-            return;
-        }
+
         System.out.println("Enter which type of account you want to create: ");
         System.out.println("1. Savings Account");
         System.out.println("2. Current Account");
@@ -241,7 +230,6 @@ public class Main {
             System.out.print("Enter a valid choice(1/2) :");
             choice=validateInt();
         }
-        scanner.nextLine();
 
         switch (choice){
             case 1:{
@@ -261,7 +249,7 @@ public class Main {
 
     private static void createCurrentAccount() {
         System.out.print("Enter your Name: ");
-        String name= scanner.nextLine();
+        String name= validateString();
         System.out.print("Enter your Initial Balance :");
         double initialBalance=validateDouble();
 
@@ -272,7 +260,7 @@ public class Main {
         }
 
         Account account=new CurrentAccount(name,initialBalance);
-        accounts[accountIndex++]=account;
+        accounts.add(account);
 
         System.out.println();
         System.out.println("Current Account Created!!");
@@ -281,17 +269,11 @@ public class Main {
 
     private static void createSavingsAccount() {
         System.out.print("Enter your Name: ");
-        String name= scanner.nextLine();
+        String name= validateString();
         System.out.print("Enter your Initial Balance :");
         double initialBalance= validateDouble();
-        while(initialBalance<0){
-            System.out.println("Enter Positive Balance !!");
-            System.out.print("Enter Balance again: ");
-            initialBalance= validateDouble();
-        }
-
         Account account=new SavingsAccount(name,initialBalance);
-        accounts[accountIndex++]=account;
+        accounts.add(account);
 
         System.out.println();
         System.out.println("Savings Account Created!!");

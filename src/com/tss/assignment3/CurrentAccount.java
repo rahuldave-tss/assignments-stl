@@ -1,5 +1,7 @@
 package com.tss.assignment3;
 
+import com.tss.exceptions.MinimumBalanceException;
+
 public class CurrentAccount extends Account{
     static final double minimumBalance=500;
 
@@ -14,9 +16,9 @@ public class CurrentAccount extends Account{
     public boolean withdraw(double amount){
         double remainingBalance=getBalance()-amount;
         if(remainingBalance<minimumBalance){
-            System.out.println("Amount can't be withdrawn because you need to maintain minimum balance");
-            return false;
+            throw new MinimumBalanceException(remainingBalance);
         }
+
         setBalance(getBalance()-amount);
         return true;
     }

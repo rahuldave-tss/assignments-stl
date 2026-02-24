@@ -16,8 +16,7 @@ public class SavingsAccount extends Account{
     }
     public boolean withdraw(double amount){
         if(getBalance()-amount<0){
-            System.out.println("Insufficient Balance");
-            return false;
+            throw new RuntimeException("Can't withdraw more than balance !!");
         }
         setBalance(getBalance()-amount);
         return true;

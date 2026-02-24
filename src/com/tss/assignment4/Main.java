@@ -5,7 +5,6 @@ import static com.tss.utils.GlobalConstants.*;
 import static com.tss.utils.Validate.*;
 
 public class Main {
-
     public static void main(String[] args) {
         while(true){
             displayMenu();
